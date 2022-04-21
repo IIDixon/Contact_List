@@ -12,11 +12,11 @@ const String imgColumn = "imgColumn";
 
 class ContactHelper{
 
+  ContactHelper.internal();
+
   static final ContactHelper _instance = ContactHelper.internal();
 
   factory ContactHelper() => _instance;
-
-  ContactHelper.internal();
 
   Database? _db;
 
@@ -107,7 +107,7 @@ class ContactHelper{
 
 class Contact{
 
-  Contact();
+  Contact({this.id,this.name = "", this.email = "", this.phone = ""});
 
   int? id;
   String? name;
