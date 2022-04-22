@@ -10,97 +10,99 @@ const String phoneColumn = "phoneColumn";
 const String imgColumn = "imgColumn";
 
 
-class ContactHelper{
+class ContactHelper{ // Classe que faz toda a comunicação com o banco de dados
 
+  // Faz com que a instância dessa classe seja única
   ContactHelper.internal();
 
   static final ContactHelper _instance = ContactHelper.internal();
 
   factory ContactHelper() => _instance;
+  //
 
   Database? _db;
 
-  Future<Database> get db async{
-    if(_db != null){
+  Future<Database> get db async{ // Pega as informações do banco de dados
+    if(_db != null){ // Caso o banco já exista, retorna as informações do mesmo
       return _db!;
-    }else{
+    }else{ // Caso não exista, faz a criação e retorna as informações do mesmo
       _db = await initDb();
       return _db!;
     }
   }
 
-  Future<Database> initDb() async{
-    final databasesPath = await getDatabasesPath();
-    final path = join(databasesPath, "Contacts.db");
+  Future<Database> initDb() async{ // Função para criação do banco de dados
+    final databasesPath = await getDatabasesPath(); // Inicia a criação do banco de dados
+    final path = join(databasesPath, "Contacts.db"); // Cria o banco de dados com o nome "Contacts.db"
 
     return openDatabase(path,version: 1, onCreate: (Database db, int newerVersion) async{
-      await db.execute(
+      await db.execute( // Executa a criação da tabela no banco de dados
         "CREATE TABLE $contactTable($idColumn INTEGER PRIMARY KEY, $nameColumn TEXT, $emailColumn TEXT, $phoneColumn TEXT, $imgColumn TEXT)"
       );
     });
   }
 
-  Future<Contact?> saveContact(Contact contact) async{
-    Database dbContact = await db;
-    contact.id = await dbContact.insert(contactTable, contact.toMap());
+  Future<Contact?> saveContact(Contact contact) async{ // Função para salvar um novo contato
+    Database dbContact = await db; // Pega as informações do banco de dados
+    contact.id = await dbContact.insert(contactTable, contact.toMap()); // Grava o registro no banco de dados, em formato 'Map'
     return contact;
   }
 
-  Future<Contact?> getContact(int id) async{
-    Database dbContact = await db;
-    List<Map> maps = await dbContact.query(contactTable,
-        columns: [idColumn, nameColumn, phoneColumn, imgColumn],
-        where: "$idColumn = ?",
-        whereArgs: [id]
+  Future<Contact?> getContact(int id) async{ // Função para buscar um determinado contato no banco de dados
+    Database dbContact = await db; // Pega as informações do banco de dados
+    List<Map> maps = await dbContact.query(contactTable, // Busca na tabela contactTable
+        columns: [idColumn, nameColumn, phoneColumn, imgColumn], // As colunas determinadas
+        where: "$idColumn = ?", // onde o 'idColumn'
+        whereArgs: [id] // seja igual ao 'id' passado como parâmetro
     );
-    if(maps.isNotEmpty){
+    if(maps.isNotEmpty){ // Caso haja resultados, retorna o primeiro contato
       return Contact.fromMap(maps.first);
-    } else{
+    } else{ // Caso contrário, retorna um vazio
       return null;
     }
   }
 
-  Future<int> deleteContact(int id) async{
-    Database dbContact = await db;
-    return await dbContact.delete(contactTable,
-        where: "$idColumn = ?",
-        whereArgs: [id]
+  Future<int> deleteContact(int id) async{ // Função para excluir um contato
+    Database dbContact = await db; // Pega as informações do banco de dados
+    return await dbContact.delete(contactTable, // Deleta da tabela 'contactTable'
+        where: "$idColumn = ?", // onde o 'idColumn'
+        whereArgs: [id] // for igual ao 'id' passado como parâmetro
     );
   }
 
-  Future<int> updateContact(Contact contact) async{
-    Database dbContact = await db;
-    return await dbContact.update(contactTable,
-        contact.toMap(),
-        where: "$idColumn = ?",
-        whereArgs: [contact.id]
+  Future<int> updateContact(Contact contact) async{ // Função para atualização das informações do contato
+    Database dbContact = await db; // Pega as informações do banco de dados
+    return await dbContact.update(contactTable, // Atualiza os registro da tabela 'contactTable'
+        contact.toMap(), // Passa as informações a serem atualizadas
+        where: "$idColumn = ?", // onde o 'idColumn'
+        whereArgs: [contact.id] // for igual ao 'id' do contato passado como parâmetro
     );
   }
 
-  Future<List<Contact>> getAllContacts() async{
-    Database dbContact = await db;
-    List<Map> listmap = await dbContact.rawQuery("SELECT * FROM $contactTable");
-    List<Contact> listContact = [];
+  Future<List<Contact>> getAllContacts() async{ // Função para listar todos os contatos
+    Database dbContact = await db; // Pega as informações do banco de dados
+    List<Map> listmap = await dbContact.rawQuery("SELECT * FROM $contactTable"); // Seleciona todos os registros da tabela 'contactTable' e atribui a uma List do tipo 'Map'
+    List<Contact> listContact = []; // Cria uma lista vazia do tipo 'Contact'
 
-    for(Map m in listmap){
-      listContact.add(Contact.fromMap(m));
+    for(Map m in listmap){ // Para cada registro retornado na query anterior
+      listContact.add(Contact.fromMap(m)); // Adiciona na listContact
     }
-    return listContact;
+    return listContact; // Retorna a lista com os contatos
   }
 
-  Future<int> deleteAllContacts() async{
-    Database dbContact = await db;
-    return await dbContact.delete(contactTable);
+  Future<int> deleteAllContacts() async{ // Função para excluir todos os contatos
+    Database dbContact = await db; // Pega as informações do banco de dados
+    return await dbContact.delete(contactTable); // Executa a exclusão dos registros da tabela e retorna um inteiro
   }
 
-  Future<int?> getNumber() async{
+  Future<int?> getNumber() async{ // Função para verificar a quantidade de registros na tabela 'contactTable'
     Database dbContact = await db;
-    return Sqflite.firstIntValue(await dbContact.rawQuery("SELEC COUNT(*) FROM $contactTable"));
+    return Sqflite.firstIntValue(await dbContact.rawQuery("SELECT COUNT(*) FROM $contactTable"));
   }
 
-  Future close() async{
-    Database dbContact = await db;
-    dbContact.close();
+  Future close() async{ // Função para fechar a conexão com o banco de dados
+    Database dbContact = await db; // Pega as informações do banco de dados
+    dbContact.close(); // Fecha a conexão
   }
 
 }
